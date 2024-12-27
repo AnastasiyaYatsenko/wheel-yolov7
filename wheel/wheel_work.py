@@ -31,9 +31,11 @@ class templateApp():
             first_row = next(csvFile)  # Compatible with Python 3.x (also 2.7)
             data = list(csvFile)
             self.wheel.set_params(data[0])
-        cv2.namedWindow('image')
-        cv2.setMouseCallback('image', self.sector_click)
-        self.img = ""
+        # cv2.namedWindow('image')
+        # cv2.setMouseCallback('image', self.sector_click)
+
+        self.template = cv2.imread('wheel/template.png', cv2.IMREAD_COLOR)
+        self.img_path = ""
         # if img == '':
         #     self.img = "wheel/img/222549_5.png"
         # else:
@@ -51,24 +53,43 @@ class templateApp():
         #     self.automatic_position_sectors(sectors)
         # self.drawWheel()
 
+    def checkFolders(self):
+        self.label_folder = 'wheel/sets/analyzed/labels'
+        self.image_folder = 'wheel/sets/analyzed/images'
+        self.sector_folder = 'wheel/sectors'
+        isExistLabels = os.path.exists('wheel/sets/analyzed/labels')
+        isExistImages = os.path.exists('wheel/sets/analyzed/images')
+        if not os.path.exists(self.label_folder):
+            os.makedirs(self.label_folder)
+        if not os.path.exists(self.image_folder):
+            os.makedirs(self.image_folder)
+        if not os.path.exists(self.sector_folder):
+            os.makedirs(self.sector_folder)
+        for i in range(len(self.wheel.wheel_class)):
+            class_name = self.wheel.wheel_class_names[i]
+            sector_subfolder = f'{self.sector_folder}/{class_name}'
+            if not os.path.exists(sector_subfolder):
+                os.makedirs(sector_subfolder)
+
+
     def set_img(self, img='', sectors=[]):
-        with open('wheel/template_params.csv', mode='r') as file:
-            # reading the CSV file
-            csvFile = csv.reader(file)
-            # displaying the contents of the CSV file
-            first_row = next(csvFile)  # Compatible with Python 3.x (also 2.7)
-            data = list(csvFile)
-            self.wheel.set_params(data[0])
+        # with open('wheel/template_params.csv', mode='r') as file:
+        #     # reading the CSV file
+        #     csvFile = csv.reader(file)
+        #     # displaying the contents of the CSV file
+        #     first_row = next(csvFile)  # Compatible with Python 3.x (also 2.7)
+        #     data = list(csvFile)
+        #     self.wheel.set_params(data[0])
         # cv2.namedWindow('image')
-        cv2.setMouseCallback('image', self.sector_click)
-        self.img = ""
+        # cv2.setMouseCallback('image', self.sector_click)
+        self.img_path = ""
         if img == '':
-            self.img = "wheel/img/222549_5.png"
+            self.img_path = "wheel/img/222549_5.png"
         else:
-            self.img = img
-        check_img = cv2.imread(self.img)
-        if check_img is None:
-            print(f"Can't read the image {self.img}")
+            self.img_path = img
+        self.img = cv2.imread(self.img_path)
+        if self.img is None:
+            print(f"Can't read the image {self.img_path}")
             return -1
         self.is_sector_selected = False
         self.selected_corners = []
@@ -82,22 +103,23 @@ class templateApp():
         if len(sectors) > 0:
             self.automatic_position_sectors(sectors)
         self.drawWheel()
+        return 1
 
     def automatic_ang_detection(self):
         self.wheel.ang_rotate = 0
-        image = cv2.imread(self.img)
-        template = cv2.imread('wheel/template.png', cv2.IMREAD_COLOR)
-        h, w = template.shape[:2]
+        # image = cv2.imread(self.img_path)
+        # template = cv2.imread('wheel/template.png', cv2.IMREAD_COLOR)
+        h, w = self.template.shape[:2]
 
-        result = cv2.matchTemplate(image, template, cv2.TM_CCOEFF_NORMED)
+        result = cv2.matchTemplate(self.img, self.template, cv2.TM_CCOEFF_NORMED)
         # threshold = 0.39
         threshold = 0.7
         locations = np.where(result >= threshold)
 
-        image_with_lines = image.copy()
+        # image_with_lines = image.copy()
         p1 = self.wheel.center[:]
-        center_x = image.shape[1] // 2
-        center_y = image.shape[0] // 2
+        center_x = self.img.shape[1] // 2
+        center_y = self.img.shape[0] // 2
 
         object_center_x = -1
         object_center_y = -1
@@ -111,13 +133,13 @@ class templateApp():
         self.wheel.ang_rotate = ang
 
     def drawWheel(self):
-        img = cv2.imread(self.img)
+        # img = cv2.imread(self.img_path)
         # img = cv2.imread("img/222549_5.png")
         # half = cv2.resize(img, (0, 0), fx=0.5, fy=0.5)
-        cv2.circle(img, self.wheel.center, self.wheel.R_full, (0, 0, 255), 3)
-        cv2.circle(img, self.wheel.center, self.wheel.R_outer, (0, 255, 0), 2)
-        cv2.circle(img, self.wheel.center, self.wheel.R_inner, (0, 255, 0), 2)
-        cv2.line(img, (self.object_center_x, self.object_center_y), (self.wheel.center[0], self.wheel.center[1]),
+        cv2.circle(self.img, self.wheel.center, self.wheel.R_full, (0, 0, 255), 3)
+        cv2.circle(self.img, self.wheel.center, self.wheel.R_outer, (0, 255, 0), 2)
+        cv2.circle(self.img, self.wheel.center, self.wheel.R_inner, (0, 255, 0), 2)
+        cv2.line(self.img, (self.object_center_x, self.object_center_y), (self.wheel.center[0], self.wheel.center[1]),
                  (150, 255, 0), 2)
         # Displaying image using plt.imshow() method
 
@@ -128,9 +150,9 @@ class templateApp():
             p1 = self.wheel.center[:]
             p2 = get_point_on_circle(p1, self.wheel.R_full, angle)
             if i == 0:
-                cv2.line(img, p1, p2, (255, 255, 255), 2)
+                cv2.line(self.img, p1, p2, (255, 255, 255), 2)
             else:
-                cv2.line(img, p1, p2, (0, 0, 255), 2)
+                cv2.line(self.img, p1, p2, (0, 0, 255), 2)
             i += 1
 
             if s.name == 'S' or s.name == 'P' or s.name == 'T':
@@ -148,16 +170,16 @@ class templateApp():
                 # for i in range(len(corners)):
                 #     s.corners[i] = corners[i][:]
 
-                cv2.line(img, pc1, pc3, (255, 0, 0), 2)
-                cv2.line(img, pc2, pc4, (255, 0, 0), 2)
+                cv2.line(self.img, pc1, pc3, (255, 0, 0), 2)
+                cv2.line(self.img, pc2, pc4, (255, 0, 0), 2)
 
-                cv2.putText(img, s.name, p_text, cv2.FONT_HERSHEY_SIMPLEX,
+                cv2.putText(self.img, s.name, p_text, cv2.FONT_HERSHEY_SIMPLEX,
                             1, (0, 255, 0), 2, cv2.LINE_AA)
             else:
                 side_ang = (s.ang - s.sector_ang) / 2
                 angle += side_ang
                 p3 = get_point_on_circle(p1, self.wheel.R_full, angle)
-                cv2.line(img, p1, p3, (0, 255, 0), 2)
+                cv2.line(self.img, p1, p3, (0, 255, 0), 2)
 
                 pc1 = get_point_on_circle(p1, self.wheel.R_inner, angle)
                 pc2 = get_point_on_circle(p1, self.wheel.R_outer, angle)
@@ -173,9 +195,9 @@ class templateApp():
                 s_c = intersection_point(pc1, pc3, pc2, pc4)
                 s.set_coords(s_c, corners)
 
-                cv2.line(img, pc1, pc3, (255, 0, 0), 2)
-                cv2.line(img, pc2, pc4, (255, 0, 0), 2)
-                cv2.putText(img, s.name, p_text, cv2.FONT_HERSHEY_SIMPLEX,
+                cv2.line(self.img, pc1, pc3, (255, 0, 0), 2)
+                cv2.line(self.img, pc2, pc4, (255, 0, 0), 2)
+                cv2.putText(self.img, s.name, p_text, cv2.FONT_HERSHEY_SIMPLEX,
                             1, (0, 255, 0), 2, cv2.LINE_AA)
 
                 angle += side_ang
@@ -191,10 +213,10 @@ class templateApp():
                                   [self.selected_corners[2][0], self.selected_corners[2][1]],
                                   [self.selected_corners[3][0], self.selected_corners[3][1]]])]
 
-            cv2.line(img, self.selected_corners[0], self.selected_corners[1], (0, 0, 255), 5)
-            cv2.line(img, self.selected_corners[1], self.selected_corners[2], (0, 0, 255), 5)
-            cv2.line(img, self.selected_corners[2], self.selected_corners[3], (0, 0, 255), 5)
-            cv2.line(img, self.selected_corners[3], self.selected_corners[0], (0, 0, 255), 5)
+            cv2.line(self.img, self.selected_corners[0], self.selected_corners[1], (0, 0, 255), 5)
+            cv2.line(self.img, self.selected_corners[1], self.selected_corners[2], (0, 0, 255), 5)
+            cv2.line(self.img, self.selected_corners[2], self.selected_corners[3], (0, 0, 255), 5)
+            cv2.line(self.img, self.selected_corners[3], self.selected_corners[0], (0, 0, 255), 5)
 
         # cv2.imshow('Image Window', img)
         # w = img_w / 2
@@ -297,13 +319,13 @@ class templateApp():
         return ang_shift
 
     def write_to_file(self, segmentation=false):
-        index_slash = self.img.rfind('/')
-        index_dot = self.img.find('.')
-        img_name = self.img[index_slash+1:index_dot]
-        name_labels = 'wheel/sets/test/labels/' + img_name + '_template' + '.txt'
-        name_images = 'wheel/sets/test/images/' + img_name + '_template' + '.png'
-        orig_img = cv2.imread(self.img)
-        img = cv2.resize(orig_img, (600, 600))
+        index_slash = self.img_path.rfind('/')
+        index_dot = self.img_path.find('.')
+        img_name = self.img_path[index_slash+1:index_dot]
+        name_labels = self.label_folder + '/' + img_name + '_template' + '.txt'
+        name_images = self.image_folder + '/' + img_name + '_template' + '.png'
+        # orig_img = cv2.imread(self.img_path)
+        img = cv2.resize(self.img, (640, 640))
         cv2.imwrite(name_images, img) # save to file
         counts = [0 for i in range(8)]
         with open(name_labels, 'w', newline='') as f:
@@ -364,21 +386,21 @@ class templateApp():
                 bot_right_x = max([x1, x2, x3, x4])
                 bot_right_y = max([y1, y2, y3, y4])
 
-                mask = np.zeros(orig_img.shape, dtype=np.uint8)
+                mask = np.zeros(self.img.shape, dtype=np.uint8)
                 roi_corners = np.array([[(x1, y1), (x2, y2), (x3, y3), (x4, y4)]], dtype=np.int32)
                 # fill the ROI so it doesn't get wiped out when the mask is applied
-                channel_count = orig_img.shape[2]  # i.e. 3 or 4 depending on your image
+                channel_count = self.img.shape[2]  # i.e. 3 or 4 depending on your image
                 ignore_mask_color = (255,) * channel_count
                 cv2.fillPoly(mask, roi_corners, ignore_mask_color)
                 # from Masterfool: use cv2.fillConvexPoly if you know it's convex
 
                 # apply the mask
-                masked_image = cv2.bitwise_and(orig_img, mask)
+                masked_image = cv2.bitwise_and(self.img, mask)
                 sec = masked_image[top_left_y:bot_right_y + 1, top_left_x:bot_right_x + 1]
                 # cv2.imshow('sec', orig_img)
                 if 0 < top_left_x < img_w and 0 < top_left_y < img_h and 0 < bot_right_x < img_w and 0 < bot_right_y < img_h:
                     class_name = self.wheel.wheel_class_names[label]
-                    name = f'wheel/sectors/{class_name}/{img_name}_{class_name}_{counts[label]:02}.png'
+                    name = f'{self.sector_folder}/{class_name}/{img_name}_{class_name}_{counts[label]:02}.png'
                     counts[label] += 1
                     cv2.imwrite(name, sec) # save to file
 
