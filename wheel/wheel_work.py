@@ -54,6 +54,7 @@ class templateApp():
     def checkFolders(self):
         self.label_folder = 'wheel/sets/analyzed/labels'
         self.image_folder = 'wheel/sets/analyzed/images'
+        self.faulty_folder = 'wheel/sets/faulty'
         self.sector_folder = 'wheel/sectors'
         isExistLabels = os.path.exists('wheel/sets/analyzed/labels')
         isExistImages = os.path.exists('wheel/sets/analyzed/images')
@@ -61,6 +62,8 @@ class templateApp():
             os.makedirs(self.label_folder)
         if not os.path.exists(self.image_folder):
             os.makedirs(self.image_folder)
+        if not os.path.exists(self.faulty_folder):
+            os.makedirs(self.faulty_folder)
         if not os.path.exists(self.sector_folder):
             os.makedirs(self.sector_folder)
         for i in range(len(self.wheel.wheel_class)):
@@ -71,33 +74,28 @@ class templateApp():
 
 
     def set_img(self, img='', sectors=[]):
-        # with open('wheel/template_params.csv', mode='r') as file:
-        #     # reading the CSV file
-        #     csvFile = csv.reader(file)
-        #     # displaying the contents of the CSV file
-        #     first_row = next(csvFile)  # Compatible with Python 3.x (also 2.7)
-        #     data = list(csvFile)
-        #     self.wheel.set_params(data[0])
-        # cv2.namedWindow('image')
-        # cv2.setMouseCallback('image', self.sector_click)
         self.img_path = ""
         if img == '':
             self.img_path = "wheel/img/222549_5.png"
         else:
             self.img_path = img
         self.img = cv2.imread(self.img_path)
-        # print(self.img_path)
         if self.img is None:
             print(f"Can't read the image {self.img_path}")
             return -1
-        # print("1")
+        index_slash = self.img_path.rfind('/')
+        index_dot = self.img_path.find('.')
+        self.img_name = self.img_path[index_slash + 1:index_dot]
         self.is_sector_selected = False
         self.selected_corners = []
         self.selected_center = (-1, -1)
         self.sel_i = -1
         self.marked = []
         # print("2")
-        self.automatic_ang_detection()
+        res = self.automatic_ang_detection()
+        if res == -1:
+            print(f"Template not found on image")
+            return -1
         # print("3")
         self.start = -1
         self.count = -1
@@ -109,6 +107,14 @@ class templateApp():
         self.drawWheel()
         return 1
 
+    def save_faulty(self):
+        # index_slash = self.img_path.rfind('/')
+        # index_dot = self.img_path.find('.')
+        # self.img_name = self.img_path[index_slash + 1:index_dot]
+        # self.faulty_folder = 'wheel/sets/faulty'
+        name_faulty = self.faulty_folder + '/' + self.img_name + '_template' + '.txt'
+        cv2.imwrite(name_faulty, self.img)  # save to file
+
     def automatic_ang_detection(self):
         self.wheel.ang_rotate = 0
         # image = cv2.imread(self.img_path)
@@ -119,6 +125,10 @@ class templateApp():
         # threshold = 0.39
         threshold = 0.7
         locations = np.where(result >= threshold)
+
+        if len(locations) <= 0:
+            # self.save_faulty()
+            return -1
 
         # image_with_lines = image.copy()
         p1 = self.wheel.center[:]
@@ -328,11 +338,11 @@ class templateApp():
 
     def write_to_file(self, segmentation=false):
         # print("in write to file")
-        index_slash = self.img_path.rfind('/')
-        index_dot = self.img_path.find('.')
-        img_name = self.img_path[index_slash+1:index_dot]
-        name_labels = self.label_folder + '/' + img_name + '_template' + '.txt'
-        name_images = self.image_folder + '/' + img_name + '_template' + '.png'
+        # index_slash = self.img_path.rfind('/')
+        # index_dot = self.img_path.find('.')
+        # img_name = self.img_path[index_slash+1:index_dot]
+        name_labels = self.label_folder + '/' + self.img_name + '_template' + '.txt'
+        name_images = self.image_folder + '/' + self.img_name + '_template' + '.png'
         # print(name_labels)
         # orig_img = cv2.imread(self.img_path)
         img = cv2.resize(self.img, (640, 640))
@@ -396,21 +406,44 @@ class templateApp():
                 bot_right_x = max([x1, x2, x3, x4])
                 bot_right_y = max([y1, y2, y3, y4])
 
-                mask = np.zeros(self.img.shape, dtype=np.uint8)
+                b_channel, g_channel, r_channel = cv2.split(self.img)
+                alpha_channel = np.ones(b_channel.shape,
+                                        dtype=b_channel.dtype) * 255  # creating a dummy alpha channel image.
+
+                img_BGRA = cv2.merge((b_channel, g_channel, r_channel, alpha_channel))
+
+                mask = np.zeros(img_BGRA.shape, dtype=np.uint8)
                 roi_corners = np.array([[(x1, y1), (x2, y2), (x3, y3), (x4, y4)]], dtype=np.int32)
                 # fill the ROI so it doesn't get wiped out when the mask is applied
-                channel_count = self.img.shape[2]  # i.e. 3 or 4 depending on your image
+                channel_count = img_BGRA.shape[2]  # i.e. 3 or 4 depending on your image
                 ignore_mask_color = (255,) * channel_count
-                cv2.fillPoly(mask, roi_corners, ignore_mask_color)
+                cv2.fillConvexPoly(mask, roi_corners, ignore_mask_color)
                 # from Masterfool: use cv2.fillConvexPoly if you know it's convex
 
                 # apply the mask
-                masked_image = cv2.bitwise_and(self.img, mask)
+                masked_image = cv2.bitwise_and(img_BGRA, mask)
                 sec = masked_image[top_left_y:bot_right_y + 1, top_left_x:bot_right_x + 1]
+
+
+
+                # print('1')
+                #
+                # tmp = cv2.cvtColor(sec, cv2.COLOR_BGR2GRAY)
+                # print('2')
+                # _, alpha = cv2.threshold(tmp, 0, 255, cv2.THRESH_BINARY)
+                # print('3')
+                # b, g, r = cv2.split(sec)
+                # print('4')
+                # rgba = [b, g, r, alpha]
+                # print('5')
+                # dst = cv2.merge(rgba, 4)
+                # print('6')
+                # cv2.imwrite("gfg_white.png", dst)
+
                 # cv2.imshow('sec', orig_img)
                 if 0 < top_left_x < img_w and 0 < top_left_y < img_h and 0 < bot_right_x < img_w and 0 < bot_right_y < img_h:
                     class_name = self.wheel.wheel_class_names[label]
-                    name = f'{self.sector_folder}/{class_name}/{img_name}_{class_name}_{counts[label]:02}.png'
+                    name = f'{self.sector_folder}/{class_name}/{self.img_name}_{class_name}_{counts[label]:02}.png'
                     counts[label] += 1
                     cv2.imwrite(name, sec) # save to file
 
