@@ -380,18 +380,26 @@ class templateApp():
                 width = num_to_range(w, 0, img_w, 0, 1)
                 height = num_to_range(h, 0, img_h, 0, 1)
                 str = f"{label} {center_x} {center_y} {width} {height}\n"
-                # if segmentation:
-                #     x1 = num_to_range(self.wheel.sectors[i].corners[0][0], 0, img_w, 0, 1)
-                #     y1 = num_to_range(self.wheel.sectors[i].corners[0][1], 0, img_w, 0, 1)
-                #     x2 = num_to_range(self.wheel.sectors[i].corners[1][0], 0, img_w, 0, 1)
-                #     y2 = num_to_range(self.wheel.sectors[i].corners[1][1], 0, img_w, 0, 1)
-                #     x3 = num_to_range(self.wheel.sectors[i].corners[2][0], 0, img_w, 0, 1)
-                #     y3 = num_to_range(self.wheel.sectors[i].corners[2][1], 0, img_w, 0, 1)
-                #     x4 = num_to_range(self.wheel.sectors[i].corners[3][0], 0, img_w, 0, 1)
-                #     y4 = num_to_range(self.wheel.sectors[i].corners[3][1], 0, img_w, 0, 1)
-                #
-                #     str = f"{label} {x2} {y2} {x1} {y1} {x4} {y4} {x3} {y3}\n"
-                f.write(str) # save to file
+                flag = True
+                if segmentation:
+                    x1 = num_to_range(self.wheel.sectors[i].corners[0][0], 0, img_w, 0, 1)
+                    y1 = num_to_range(self.wheel.sectors[i].corners[0][1], 0, img_h, 0, 1)
+                    x2 = num_to_range(self.wheel.sectors[i].corners[1][0], 0, img_w, 0, 1)
+                    y2 = num_to_range(self.wheel.sectors[i].corners[1][1], 0, img_h, 0, 1)
+                    x3 = num_to_range(self.wheel.sectors[i].corners[2][0], 0, img_w, 0, 1)
+                    y3 = num_to_range(self.wheel.sectors[i].corners[2][1], 0, img_h, 0, 1)
+                    x4 = num_to_range(self.wheel.sectors[i].corners[3][0], 0, img_w, 0, 1)
+                    y4 = num_to_range(self.wheel.sectors[i].corners[3][1], 0, img_h, 0, 1)
+
+                    if not ((0 <= x1 <= img_w and 0 <= x2 <= img_w and 0 <= x3 <= img_w and 0 <= x4 <= img_w) and (
+                        0 <= y1 <= img_h and 0 <= y2 <= img_h and 0 <= y3 <= img_h and 0 <= y4 <= img_h)):
+                        flag = False
+
+                    str = f"{label} {x2} {y2} {x1} {y1} {x4} {y4} {x3} {y3}\n"
+                if flag:
+                    f.write(str) # save to file
+                else:
+                    continue # no need to save this sector
 
                 x1 = self.wheel.sectors[i].corners[0][0]
                 x2 = self.wheel.sectors[i].corners[1][0]
@@ -424,24 +432,8 @@ class templateApp():
                 masked_image = cv2.bitwise_and(img_BGRA, mask)
                 sec = masked_image[top_left_y:bot_right_y + 1, top_left_x:bot_right_x + 1]
 
-
-
-                # print('1')
-                #
-                # tmp = cv2.cvtColor(sec, cv2.COLOR_BGR2GRAY)
-                # print('2')
-                # _, alpha = cv2.threshold(tmp, 0, 255, cv2.THRESH_BINARY)
-                # print('3')
-                # b, g, r = cv2.split(sec)
-                # print('4')
-                # rgba = [b, g, r, alpha]
-                # print('5')
-                # dst = cv2.merge(rgba, 4)
-                # print('6')
-                # cv2.imwrite("gfg_white.png", dst)
-
                 # cv2.imshow('sec', orig_img)
-                if 0 < top_left_x < img_w and 0 < top_left_y < img_h and 0 < bot_right_x < img_w and 0 < bot_right_y < img_h:
+                if 0 <= top_left_x <= img_w and 0 <= top_left_y <= img_h and 0 <= bot_right_x <= img_w and 0 <= bot_right_y <= img_h:
                     class_name = self.wheel.wheel_class_names[label]
                     name = f'{self.sector_folder}/{class_name}/{self.img_name}_{class_name}_{counts[label]:02}.png'
                     counts[label] += 1

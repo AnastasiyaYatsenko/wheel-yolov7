@@ -152,8 +152,9 @@ def detect(save_img=False):
                             app.write_to_file(segment)
                         else:
                             app.save_faulty()
-                    except:
+                    except Exception as e:
                         print(f"Something went wrong with the picture {path}, proceed")
+                        print(e)
                         app.save_faulty()
 
                 # print(detected_sectors)
