@@ -153,8 +153,8 @@ def detect(save_img=False):
                         else:
                             app.save_faulty()
                     except:
-                        app.save_faulty()
                         print(f"Something went wrong with the picture {path}, proceed")
+                        app.save_faulty()
 
                 # print(detected_sectors)
                 # Print time (inference + NMS)
@@ -186,6 +186,7 @@ def detect(save_img=False):
                         vid_writer.write(im0)
         except:
             print(f"Something went wrong with detection and applying template on {path}")
+            # app.save_faulty()
 
     if save_txt or save_img:
         s = f"\n{len(list(save_dir.glob('labels/*.txt')))} labels saved to {save_dir / 'labels'}" if save_txt else ''

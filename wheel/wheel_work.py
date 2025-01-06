@@ -132,11 +132,11 @@ class templateApp():
 
         # image_with_lines = image.copy()
         p1 = self.wheel.center[:]
-        center_x = self.img.shape[1] // 2
-        center_y = self.img.shape[0] // 2
-
-        object_center_x = -1
-        object_center_y = -1
+        # center_x = self.img.shape[1] // 2
+        # center_y = self.img.shape[0] // 2
+        #
+        # object_center_x = -1
+        # object_center_y = -1
 
         object_center_x = locations[1][0] + w // 2
         object_center_y = locations[0][0] + h // 2
