@@ -108,23 +108,11 @@ class templateApp():
         return 1
 
     def save_faulty(self):
-        # index_slash = self.img_path.rfind('/')
-        # index_dot = self.img_path.find('.')
-        # self.img_name = self.img_path[index_slash + 1:index_dot]
-        # self.faulty_folder = 'wheel/sets/faulty'
-        # print("in save faulty func")
         name_faulty = self.faulty_folder + '/' + self.img_name + '_faulty' + '.png'
-        # print(f"name: {name_faulty}")
-        # try:
         cv2.imwrite(name_faulty, self.img)  # save to file
-        # except Exception as e:
-        #     print(e)
-        # print("saved!")
 
     def automatic_ang_detection(self):
         self.wheel.ang_rotate = 0
-        # image = cv2.imread(self.img_path)
-        # template = cv2.imread('wheel/template.png', cv2.IMREAD_COLOR)
         h, w = self.template.shape[:2]
 
         result = cv2.matchTemplate(self.img, self.template, cv2.TM_CCOEFF_NORMED)
@@ -138,11 +126,6 @@ class templateApp():
 
         # image_with_lines = image.copy()
         p1 = self.wheel.center[:]
-        # center_x = self.img.shape[1] // 2
-        # center_y = self.img.shape[0] // 2
-        #
-        # object_center_x = -1
-        # object_center_y = -1
 
         object_center_x = locations[1][0] + w // 2
         object_center_y = locations[0][0] + h // 2

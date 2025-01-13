@@ -13,6 +13,7 @@ from utils.general import check_img_size, check_requirements, check_imshow, non_
     scale_coords, xyxy2xywh, strip_optimizer, set_logging, increment_path
 from utils.plots import plot_one_box
 from utils.torch_utils import select_device, load_classifier, time_synchronized, TracedModel
+from wheel.ttv import divide_into_sets
 from wheel.wheel_work import templateApp
 from tqdm import tqdm
 
@@ -228,6 +229,7 @@ if __name__ == '__main__':
                 strip_optimizer(opt.weights)
         else:
             detect()
+            divide_into_sets()
         # app = templateApp()
         # app.set_img(saved_source, detected_sectors)
         # app.write_to_file()
