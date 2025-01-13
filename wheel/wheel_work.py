@@ -112,8 +112,14 @@ class templateApp():
         # index_dot = self.img_path.find('.')
         # self.img_name = self.img_path[index_slash + 1:index_dot]
         # self.faulty_folder = 'wheel/sets/faulty'
-        name_faulty = self.faulty_folder + '/' + self.img_name + '_template' + '.txt'
+        # print("in save faulty func")
+        name_faulty = self.faulty_folder + '/' + self.img_name + '_faulty' + '.png'
+        # print(f"name: {name_faulty}")
+        # try:
         cv2.imwrite(name_faulty, self.img)  # save to file
+        # except Exception as e:
+        #     print(e)
+        # print("saved!")
 
     def automatic_ang_detection(self):
         self.wheel.ang_rotate = 0
