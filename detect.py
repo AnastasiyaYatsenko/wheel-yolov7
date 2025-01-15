@@ -1,4 +1,5 @@
 import argparse
+import os
 import time
 from pathlib import Path
 
@@ -7,6 +8,7 @@ import torch
 import torch.backends.cudnn as cudnn
 from numpy import random
 
+from gpumonitor import Monitor
 from models.experimental import attempt_load
 from utils.datasets import LoadStreams, LoadImages
 from utils.general import check_img_size, check_requirements, check_imshow, non_max_suppression, apply_classifier, \
@@ -16,14 +18,19 @@ from utils.torch_utils import select_device, load_classifier, time_synchronized,
 from wheel.ttv import divide_into_sets
 from wheel.wheel_work import templateApp
 from tqdm import tqdm
+import GPUtil
 
 detected_sectors = [] # for the wheel
 saved_source = ""
 
 app = templateApp()
+# app = None
 
 def detect(save_img=False):
     global detected_sectors, saved_source
+    # app = templateApp()
+    # if not app.template_exist:
+    #     return
     detected_sectors = [] # for the wheel
 
     source, weights, view_img, save_txt, imgsz, trace = opt.source, opt.weights, opt.view_img, opt.save_txt, opt.img_size, not opt.no_trace
@@ -39,6 +46,13 @@ def detect(save_img=False):
 
     # Initialize
     set_logging()
+    # print(f"opt device: {opt.device}")
+
+    # DEVICE_ID_LIST = GPUtil.getFirstAvailable()
+    # DEVICE_ID = DEVICE_ID_LIST[0]
+    # if opt.device != '' and opt.device != 'cpu':
+    #     device = select_device(str(DEVICE_ID))
+    # else:
     device = select_device(opt.device)
     half = device.type != 'cpu'  # half precision only supported on CUDA
 
@@ -222,15 +236,16 @@ if __name__ == '__main__':
     print(opt)
     #check_requirements(exclude=('pycocotools', 'thop'))
 
-    with torch.no_grad():
-        if opt.update:  # update all models (to fix SourceChangeWarning)
-            for opt.weights in ['yolov7.pt']:
+    if os.path.isfile('wheel/template.png'):
+        # monitor = Monitor(10)
+        with torch.no_grad():
+            if opt.update:  # update all models (to fix SourceChangeWarning)
+                for opt.weights in ['yolov7.pt']:
+                    detect()
+                    strip_optimizer(opt.weights)
+            else:
                 detect()
-                strip_optimizer(opt.weights)
-        else:
-            detect()
-            divide_into_sets()
-        # app = templateApp()
-        # app.set_img(saved_source, detected_sectors)
-        # app.write_to_file()
-
+                divide_into_sets()
+        # monitor.stop()
+    else:
+        print("Template file does not exist!")

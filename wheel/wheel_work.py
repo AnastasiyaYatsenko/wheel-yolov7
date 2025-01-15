@@ -34,8 +34,14 @@ class templateApp():
             self.wheel.set_params(data[0])
         # cv2.namedWindow('image')
         # cv2.setMouseCallback('image', self.sector_click)
-
-        self.template = cv2.imread('wheel/template.png', cv2.IMREAD_COLOR)
+        self.template_exist = True
+        # print("boop")
+        try:
+            self.template = cv2.imread('wheel/template.png', cv2.IMREAD_COLOR)
+        except:
+            print("Template image doesn't exist!")
+            self.template_exist = False
+        # self.template = cv2.imread('wheel/template.png', cv2.IMREAD_COLOR)
         self.img_path = ""
         self.checkFolders()
         self.is_sector_selected = False
@@ -74,6 +80,9 @@ class templateApp():
 
 
     def set_img(self, img='', sectors=[]):
+        if not self.template_exist:
+            return -1
+
         self.img_path = ""
         if img == '':
             self.img_path = "wheel/img/222549_5.png"
@@ -380,8 +389,8 @@ class templateApp():
                     x4 = num_to_range(self.wheel.sectors[i].corners[3][0], 0, img_w, 0, 1)
                     y4 = num_to_range(self.wheel.sectors[i].corners[3][1], 0, img_h, 0, 1)
 
-                    if not ((0 <= x1 <= img_w and 0 <= x2 <= img_w and 0 <= x3 <= img_w and 0 <= x4 <= img_w) and (
-                        0 <= y1 <= img_h and 0 <= y2 <= img_h and 0 <= y3 <= img_h and 0 <= y4 <= img_h)):
+                    if not ((0 <= x1 <= 1.0 and 0 <= x2 <= 1.0 and 0 <= x3 <= 1.0 and 0 <= x4 <= 1.0) and (
+                        0 <= y1 <= 1.0 and 0 <= y2 <= 1.0 and 0 <= y3 <= 1.0 and 0 <= y4 <= 1.0)):
                         flag = False
 
                     str = f"{label} {x2} {y2} {x1} {y1} {x4} {y4} {x3} {y3}\n"
