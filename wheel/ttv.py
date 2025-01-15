@@ -1,6 +1,7 @@
 import os
 import shutil
 import random
+import yaml
 
 
 def move_files_with_labels(img_source_dir, label_source_dir, dest_dirs, percentages):
@@ -74,3 +75,21 @@ def divide_into_sets():
 
     # Переміщуємо файли
     move_files_with_labels(img_source, label_source, destinations, percentages)
+
+    # train:../ train / images
+    # val:../ valid / images
+    # test:../ test / images
+    #
+    # nc: 8
+    names = ['1', '10', '100', '2', '200', '300', '5', '8']
+    data = dict(
+        train=destinations[0],
+        val=destinations[2],
+        test=destinations[1],
+
+        nc=8,
+        names=names
+    )
+
+    with open('data.yaml', 'w') as outfile:
+        yaml.dump(data, outfile, default_flow_style=False, sort_keys=False)

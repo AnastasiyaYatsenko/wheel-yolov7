@@ -1,0 +1,13 @@
+train: wheel/divided/train
+val: wheel/divided/valid
+test: wheel/divided/test
+nc: 8
+names:
+- '1'
+- '10'
+- '100'
+- '2'
+- '200'
+- '300'
+- '5'
+- '8'

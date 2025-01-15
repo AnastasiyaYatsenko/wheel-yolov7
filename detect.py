@@ -8,8 +8,10 @@ import torch
 import torch.backends.cudnn as cudnn
 from numpy import random
 
-from gpumonitor import Monitor
+# from gpumonitor import Monitor
 from models.experimental import attempt_load
+# from pygame_monitor import PGMonitor
+from resnet import eval_sectors
 from utils.datasets import LoadStreams, LoadImages
 from utils.general import check_img_size, check_requirements, check_imshow, non_max_suppression, apply_classifier, \
     scale_coords, xyxy2xywh, strip_optimizer, set_logging, increment_path
@@ -18,7 +20,7 @@ from utils.torch_utils import select_device, load_classifier, time_synchronized,
 from wheel.ttv import divide_into_sets
 from wheel.wheel_work import templateApp
 from tqdm import tqdm
-import GPUtil
+# import GPUtil
 
 detected_sectors = [] # for the wheel
 saved_source = ""
@@ -237,7 +239,7 @@ if __name__ == '__main__':
     #check_requirements(exclude=('pycocotools', 'thop'))
 
     if os.path.isfile('wheel/template.png'):
-        # monitor = Monitor(10)
+        # monitor = PGMonitor(10)
         with torch.no_grad():
             if opt.update:  # update all models (to fix SourceChangeWarning)
                 for opt.weights in ['yolov7.pt']:
@@ -246,6 +248,9 @@ if __name__ == '__main__':
             else:
                 detect()
                 divide_into_sets()
+        inp = input("Start evaluation? Y/n: ")
+        if inp != 'n':
+            eval_sectors()
         # monitor.stop()
     else:
         print("Template file does not exist!")
