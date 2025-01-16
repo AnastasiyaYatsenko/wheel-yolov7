@@ -10,7 +10,7 @@ from numpy import random
 
 # from gpumonitor import Monitor
 from models.experimental import attempt_load
-# from pygame_monitor import PGMonitor
+from pygame_monitor import PGMonitor
 from resnet import eval_sectors
 from utils.datasets import LoadStreams, LoadImages
 from utils.general import check_img_size, check_requirements, check_imshow, non_max_suppression, apply_classifier, \
@@ -239,7 +239,7 @@ if __name__ == '__main__':
     #check_requirements(exclude=('pycocotools', 'thop'))
 
     if os.path.isfile('wheel/template.png'):
-        # monitor = PGMonitor(10)
+        monitor = PGMonitor(0.5)
         with torch.no_grad():
             if opt.update:  # update all models (to fix SourceChangeWarning)
                 for opt.weights in ['yolov7.pt']:
@@ -251,6 +251,6 @@ if __name__ == '__main__':
         inp = input("Start evaluation? Y/n: ")
         if inp != 'n':
             eval_sectors()
-        # monitor.stop()
+        monitor.stop()
     else:
         print("Template file does not exist!")
