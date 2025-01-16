@@ -12,6 +12,7 @@ from sympy import false
 from wheel.WheelTemplate import *
 from wheel.math_functions import *
 import os
+from SH.SH import PolygonClipper
 # from tqdm import tqdm
 
 img_w = 1920
@@ -379,38 +380,97 @@ class templateApp():
                 height = num_to_range(h, 0, img_h, 0, 1)
                 str = f"{label} {center_x} {center_y} {width} {height}\n"
                 flag = True
+
+                # cutting_corners = self.wheel.sectors[i].corners
+                cutting_corners = []
+
                 if segmentation:
-                    x1 = num_to_range(self.wheel.sectors[i].corners[0][0], 0, img_w, 0, 1)
-                    y1 = num_to_range(self.wheel.sectors[i].corners[0][1], 0, img_h, 0, 1)
-                    x2 = num_to_range(self.wheel.sectors[i].corners[1][0], 0, img_w, 0, 1)
-                    y2 = num_to_range(self.wheel.sectors[i].corners[1][1], 0, img_h, 0, 1)
-                    x3 = num_to_range(self.wheel.sectors[i].corners[2][0], 0, img_w, 0, 1)
-                    y3 = num_to_range(self.wheel.sectors[i].corners[2][1], 0, img_h, 0, 1)
-                    x4 = num_to_range(self.wheel.sectors[i].corners[3][0], 0, img_w, 0, 1)
-                    y4 = num_to_range(self.wheel.sectors[i].corners[3][1], 0, img_h, 0, 1)
+                    str = f"{label}"
+                    # cutting_corners = []
 
-                    if not ((0 <= x1 <= 1.0 and 0 <= x2 <= 1.0 and 0 <= x3 <= 1.0 and 0 <= x4 <= 1.0) and (
-                        0 <= y1 <= 1.0 and 0 <= y2 <= 1.0 and 0 <= y3 <= 1.0 and 0 <= y4 <= 1.0)):
-                        flag = False
+                    x1 = self.wheel.sectors[i].corners[0][0]
+                    y1 = self.wheel.sectors[i].corners[0][1]
+                    x2 = self.wheel.sectors[i].corners[1][0]
+                    y2 = self.wheel.sectors[i].corners[1][1]
+                    x3 = self.wheel.sectors[i].corners[2][0]
+                    y3 = self.wheel.sectors[i].corners[2][1]
+                    x4 = self.wheel.sectors[i].corners[3][0]
+                    y4 = self.wheel.sectors[i].corners[3][1]
 
-                    str = f"{label} {x2} {y2} {x1} {y1} {x4} {y4} {x3} {y3}\n"
+                    # print("1")
+                    # subject_polygon = np.array([[x1, y1], [x2, y2], [x3, y3], [x4, y4]])
+                    subject_polygon = np.array([[x4, y4], [x3, y3], [x2, y2], [x1, y1]])
+                    # print(f"sector: {subject_polygon}")
+                    # clipping_polygon = np.array([[0, 0], [img_w, 0], [img_w, img_h], [0, img_h]])
+                    clipping_polygon = np.array([[0, 0], [0, img_h], [img_w, img_h], [img_w, 0]])
+                    # print(f"screen: {clipping_polygon}")
+                    # print("2")
+
+                    clip = PolygonClipper(warn_if_empty=True)
+                    clipped_polygon = clip(subject_polygon, clipping_polygon)
+                    # print(f"{label}: {clipped_polygon}")
+                    # print("3")
+                    if len(clipped_polygon) > 0:
+                        for coord in clipped_polygon:
+                            x = num_to_range(int(coord[0]), 0, img_w, 0, 1)
+                            y = num_to_range(int(coord[1]), 0, img_h, 0, 1)
+                            cutting_corners.append((int(coord[0]), int(coord[1])))
+                            str += f" {x} {y}"
+                        # str += "\n"
+                    else:
+                        for coord in subject_polygon:
+                            x = num_to_range(int(coord[0]), 0, img_w, 0, 1)
+                            y = num_to_range(int(coord[1]), 0, img_h, 0, 1)
+                            cutting_corners.append((int(coord[0]), int(coord[1])))
+                            str += f" {x} {y}"
+                    str += "\n"
+
+                    # print(f"{label}: {cutting_corners}")
+                    # print(str)
+
+
+                    # x1 = num_to_range(self.wheel.sectors[i].corners[0][0], 0, img_w, 0, 1)
+                    # y1 = num_to_range(self.wheel.sectors[i].corners[0][1], 0, img_h, 0, 1)
+                    # x2 = num_to_range(self.wheel.sectors[i].corners[1][0], 0, img_w, 0, 1)
+                    # y2 = num_to_range(self.wheel.sectors[i].corners[1][1], 0, img_h, 0, 1)
+                    # x3 = num_to_range(self.wheel.sectors[i].corners[2][0], 0, img_w, 0, 1)
+                    # y3 = num_to_range(self.wheel.sectors[i].corners[2][1], 0, img_h, 0, 1)
+                    # x4 = num_to_range(self.wheel.sectors[i].corners[3][0], 0, img_w, 0, 1)
+                    # y4 = num_to_range(self.wheel.sectors[i].corners[3][1], 0, img_h, 0, 1)
+
+                    # if not ((0 <= x1 <= 1.0 and 0 <= x2 <= 1.0 and 0 <= x3 <= 1.0 and 0 <= x4 <= 1.0) and (
+                    #     0 <= y1 <= 1.0 and 0 <= y2 <= 1.0 and 0 <= y3 <= 1.0 and 0 <= y4 <= 1.0)):
+                    #     flag = False
+                    #
+                    # str = f"{label} {x2} {y2} {x1} {y1} {x4} {y4} {x3} {y3}\n"
                 if flag:
                     f.write(str) # save to file
                 else:
                     continue # no need to save this sector
 
-                x1 = self.wheel.sectors[i].corners[0][0]
-                x2 = self.wheel.sectors[i].corners[1][0]
-                x3 = self.wheel.sectors[i].corners[2][0]
-                x4 = self.wheel.sectors[i].corners[3][0]
-                y1 = self.wheel.sectors[i].corners[0][1]
-                y2 = self.wheel.sectors[i].corners[1][1]
-                y3 = self.wheel.sectors[i].corners[2][1]
-                y4 = self.wheel.sectors[i].corners[3][1]
-                top_left_x = min([x1, x2, x3, x4])
-                top_left_y = min([y1, y2, y3, y4])
-                bot_right_x = max([x1, x2, x3, x4])
-                bot_right_y = max([y1, y2, y3, y4])
+                # x1 = self.wheel.sectors[i].corners[0][0]
+                # x2 = self.wheel.sectors[i].corners[1][0]
+                # x3 = self.wheel.sectors[i].corners[2][0]
+                # x4 = self.wheel.sectors[i].corners[3][0]
+                # y1 = self.wheel.sectors[i].corners[0][1]
+                # y2 = self.wheel.sectors[i].corners[1][1]
+                # y3 = self.wheel.sectors[i].corners[2][1]
+                # y4 = self.wheel.sectors[i].corners[3][1]
+                # top_left_x = min([x1, x2, x3, x4])
+                # top_left_y = min([y1, y2, y3, y4])
+                # bot_right_x = max([x1, x2, x3, x4])
+                # bot_right_y = max([y1, y2, y3, y4])
+
+                x_array = []
+                y_array = []
+                for coord in cutting_corners:
+                    x_array.append(coord[0])
+                    y_array.append(coord[1])
+
+                top_left_x = min(x_array)
+                top_left_y = min(y_array)
+                bot_right_x = max(x_array)
+                bot_right_y = max(y_array)
 
                 b_channel, g_channel, r_channel = cv2.split(self.img)
                 alpha_channel = np.ones(b_channel.shape,
@@ -419,7 +479,7 @@ class templateApp():
                 img_BGRA = cv2.merge((b_channel, g_channel, r_channel, alpha_channel))
 
                 mask = np.zeros(img_BGRA.shape, dtype=np.uint8)
-                roi_corners = np.array([[(x1, y1), (x2, y2), (x3, y3), (x4, y4)]], dtype=np.int32)
+                roi_corners = np.array([cutting_corners], dtype=np.int32)
                 # fill the ROI so it doesn't get wiped out when the mask is applied
                 channel_count = img_BGRA.shape[2]  # i.e. 3 or 4 depending on your image
                 ignore_mask_color = (255,) * channel_count
@@ -430,12 +490,12 @@ class templateApp():
                 masked_image = cv2.bitwise_and(img_BGRA, mask)
                 sec = masked_image[top_left_y:bot_right_y + 1, top_left_x:bot_right_x + 1]
 
-                # cv2.imshow('sec', orig_img)
-                if 0 <= top_left_x <= img_w and 0 <= top_left_y <= img_h and 0 <= bot_right_x <= img_w and 0 <= bot_right_y <= img_h:
-                    class_name = self.wheel.wheel_class_names[label]
-                    name = f'{self.sector_folder}/{class_name}/{self.img_name}_{class_name}_{counts[label]:02}.png'
-                    counts[label] += 1
-                    cv2.imwrite(name, sec) # save to file
+                # cv2.imshow('sec', masked_image)
+                # if 0 <= top_left_x <= img_w and 0 <= top_left_y <= img_h and 0 <= bot_right_x <= img_w and 0 <= bot_right_y <= img_h:
+                class_name = self.wheel.wheel_class_names[label]
+                name = f'{self.sector_folder}/{class_name}/{self.img_name}_{class_name}_{counts[label]:02}.png'
+                counts[label] += 1
+                cv2.imwrite(name, sec) # save to file
 
     def get_visible_sectors(self):
         # sectors = self.wheel.getSectors()

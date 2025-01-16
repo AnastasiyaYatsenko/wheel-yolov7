@@ -81,14 +81,14 @@ def divide_into_sets():
     # test:../ test / images
     #
     # nc: 8
-    names = ['1', '10', '100', '2', '200', '300', '5', '8']
+    # names = ['1', '10', '100', '2', '200', '300', '5', '8']
     data = dict(
         train=destinations[0],
         val=destinations[2],
         test=destinations[1],
 
         nc=8,
-        names=names
+        names=['1', '10', '100', '2', '200', '300', '5', '8']
     )
 
     with open('wheel/divided/data.yaml', 'w') as outfile:
