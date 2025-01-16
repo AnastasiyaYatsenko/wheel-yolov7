@@ -91,5 +91,5 @@ def divide_into_sets():
         names=names
     )
 
-    with open('data.yaml', 'w') as outfile:
-        yaml.dump(data, outfile, default_flow_style=False, sort_keys=False)
+    with open('wheel/divided/data.yaml', 'w') as outfile:
+        yaml.dump(data, outfile, default_flow_style=None, sort_keys=False)
