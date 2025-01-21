@@ -93,7 +93,10 @@ class templateApp():
         if self.img is None:
             print(f"Can't read the image {self.img_path}")
             return -1
-        index_slash = self.img_path.rfind('/')
+        if os.name == 'nt':
+            index_slash = self.img_path.rfind('\\')
+        else:
+            index_slash = self.img_path.rfind('/')
         index_dot = self.img_path.find('.')
         self.img_name = self.img_path[index_slash + 1:index_dot]
         self.is_sector_selected = False

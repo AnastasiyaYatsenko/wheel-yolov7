@@ -11,6 +11,7 @@ class PGMonitor(Thread):
     def __init__(self, delay):
         super(PGMonitor, self).__init__()
         self.stopped = False
+        self.paused = False
         self.delay = delay  # Time between calls to GPUtil
         self.start()
         self.info = ""
@@ -23,14 +24,21 @@ class PGMonitor(Thread):
 
     def run(self):
         while not self.stopped:
-            f = io.StringIO()
-            with redirect_stdout(f):
-                GPUtil.showUtilization()
-            self.info = f.getvalue()
+            if not self.paused:
+                f = io.StringIO()
+                with redirect_stdout(f):
+                    GPUtil.showUtilization()
+                self.info = f.getvalue()
             time.sleep(self.delay)
 
     def stop(self):
         self.stopped = True
+
+    def pause(self):
+        self.paused = True
+
+    def resume(self):
+        self.paused = False
 
     def draw(self):
         pygame.init()
