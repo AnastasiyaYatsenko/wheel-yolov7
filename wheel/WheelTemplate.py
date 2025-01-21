@@ -26,11 +26,13 @@ class WheelTemplate:
     R_inner = 80
     ang_rotate = 0
     center = (0, 0)
+    #TODO probably change the order of sector names according to ids
     wheel_nums = ['S', '1', '2', '5', '1', '10', '2', '5', '1', '8', '2',
                   'P', '1', '2', '1', '5', '1', '10', '1', '8', '1', '2',
                   'T', '1', '2', '5', '1', '2', '1', '8', '2', '1',
                   'P', '2', '1', '8', '1', '10', '1', '5', '1', '2', '1',
                   'T', '2', '8', '1', '5', '2', '10', '1', '5', '2', '1']
+    start_id = 100
     wheel_widths = []
     wheel_class_names = ['1', '10', '100', '2', '200', '300', '5', '8']
     wheel_class = {'1': 0,
@@ -43,7 +45,7 @@ class WheelTemplate:
                    '8': 7}
 
     def __init__(self):
-        i = 0
+        i = self.start_id
         self.sectors = []
         for num in self.wheel_nums:
             s = Sector(i, num)

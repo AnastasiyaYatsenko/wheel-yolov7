@@ -82,7 +82,7 @@ class templateApp():
 
     def set_img(self, img='', sectors=[]):
         if not self.template_exist:
-            return -1
+            return [[-1]]
 
         self.img_path = ""
         if img == '':
@@ -92,8 +92,12 @@ class templateApp():
         self.img = cv2.imread(self.img_path)
         if self.img is None:
             print(f"Can't read the image {self.img_path}")
-            return -1
-        index_slash = self.img_path.rfind('/')
+            return [[-1]]
+        index_slash = -1
+        if os.name == 'nt':
+            index_slash = self.img_path.rfind('\\')
+        else:
+            index_slash = self.img_path.rfind('/')
         index_dot = self.img_path.find('.')
         self.img_name = self.img_path[index_slash + 1:index_dot]
         self.is_sector_selected = False
@@ -105,7 +109,7 @@ class templateApp():
         res = self.automatic_ang_detection()
         if res == -1:
             print(f"Template not found on image")
-            return -1
+            return [[-1]]
         # print("3")
         self.start = -1
         self.count = -1
@@ -115,7 +119,8 @@ class templateApp():
             self.automatic_position_sectors(sectors)
         # print("5")
         self.drawWheel()
-        return 1
+        label_ids = self.get_visible_sector_ids()
+        return label_ids
 
     def save_faulty(self):
         name_faulty = self.faulty_folder + '/' + self.img_name + '_faulty' + '.png'
@@ -334,6 +339,20 @@ class templateApp():
         self.wheel.ang_rotate += ang_shift
         self.wheel.ang_rotate = normalize(self.wheel.ang_rotate)
         return ang_shift
+
+    def get_visible_sector_ids(self):
+        label_id_arr = []
+        for j in range(self.start, self.start + self.count):
+            i = j
+            if j >= len(self.wheel.sectors):
+                i = j - len(self.wheel.sectors)
+            if (not 0 < self.wheel.sectors[i].center[0] < img_w) or (
+                    not 0 < self.wheel.sectors[i].center[1] < img_h):
+                continue
+            label = self.wheel.wheel_class[self.wheel.sectors[i].name]
+            label_id_arr.append([label, self.wheel.sectors[i].id])
+        return label_id_arr
+
 
     def write_to_file(self, segmentation=false):
         # print("in write to file")

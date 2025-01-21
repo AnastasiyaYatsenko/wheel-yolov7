@@ -165,7 +165,8 @@ def detect(save_img=False):
 
                     try:
                         res = app.set_img(path, detected_sectors)
-                        if res != -1:
+                        if res[0][0] != -1:
+                            print(res)
                             app.write_to_file(segment)
                         else:
                             app.save_faulty()
@@ -248,7 +249,9 @@ if __name__ == '__main__':
             else:
                 detect()
                 divide_into_sets()
+        monitor.pause()
         inp = input("Start evaluation? Y/n: ")
+        monitor.resume()
         if inp != 'n':
             eval_sectors()
         monitor.stop()
